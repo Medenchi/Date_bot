@@ -1,9 +1,9 @@
 import os
-import asyncio
 from datetime import datetime
 from fastapi import FastAPI
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
+from aiogram.types import Message
 import requests
 
 API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
@@ -52,7 +52,7 @@ def generate_message(all_holidays, local_holidays):
 
     return message
 
-async def send_holidays():
+async def send_holidays(chat_id):
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
     month_day = now.strftime("%m-%d")
@@ -62,12 +62,30 @@ async def send_holidays():
 
     message = generate_message(all_holidays, local_holidays)
 
-    await bot.send_message(chat_id=ADMIN_ID, text=message, parse_mode=ParseMode.MARKDOWN)
+    await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+
+@dp.message(lambda message: message.text == "/start")
+async def cmd_start(message: Message):
+    await send_holidays(message.from_user.id)
 
 @app.get("/send-holidays")
 async def trigger_send():
-    await send_holidays()
+    await send_holidays(ADMIN_ID)
     return {"status": "ok"}
+
+@app.post("/")
+async def webhook(request: dict):
+    update = types.Update(**request)
+    await dp.feed_webhook_update(bot, update)
+
+@app.on_event("startup")
+async def on_startup():
+    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}/"
+    await bot.set_webhook(webhook_url)
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await bot.delete_webhook()
 
 if __name__ == "__main__":
     import uvicorn
