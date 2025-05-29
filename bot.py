@@ -4,8 +4,8 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher
 from aiogram.types import ParseMode
 
-API_TOKEN = "ВАШ_ТОКЕН"
-ADMIN_ID = 123456789  # Твой Telegram ID для получения сообщений
+API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
+ADMIN_ID = 6613852308  # Твой Telegram ID для получения сообщений
 
 # Источник всех возможных праздников
 CHECKIDAY_API_URL = "https://checkiday.com/api/v1/dates/"
