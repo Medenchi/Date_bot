@@ -9,7 +9,7 @@ from aiogram.types import Message
 import requests
 
 # === Настройки ===
-API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
+API_TOKEN = "7967235756:AAFFTdxNdD81GlS6GkVdK4KbNYgWql-axYM"
 ADMIN_ID = 6613852308
 
 CHECKIDAY_API_URL = "https://checkiday.com/api/v1/dates/"
