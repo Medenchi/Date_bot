@@ -1,3 +1,3 @@
 aiogram
-request
+requests
 python-dotenv
