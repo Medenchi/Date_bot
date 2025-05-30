@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import Message, Update
 
-API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
+API_TOKEN = "7967235756:AAE4_T3cqfpBiddBzSlLvq0UCGjlPr7Oc_M"
 ADMIN_ID = 6613852308
 
 # Источники праздников
