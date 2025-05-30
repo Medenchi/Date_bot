@@ -1,4 +1,5 @@
 fastapi
 uvicorn
-aiogram
+aiogram>=3.0.0b7
 requests
+aiohttp
