@@ -5,18 +5,16 @@ from datetime import datetime
 from fastapi import FastAPI
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.types import Message
-from aiogram.client.session.aiohttp import AiohttpSession
+from aiogram.types import Message, Update
 
-session = AiohttpSession()
-bot = Bot(token="7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY", session=session)
-dp = Dispatcher()
+API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
+ADMIN_ID = 6613852308
 
-app = FastAPI()
-
+# Источники праздников
 CHECKIDAY_API_URL = "https://checkiday.com/api/v1/dates/"
 CALENDAR_API_URL = "https://date.nager.at/api/v2/PublicHolidays/{year}/RU"
 
+# Республиканские праздники Башкортостана
 BASHKORTOSTAN_HOLIDAYS = {
     "01-21": "День родного языка башкир",
     "06-24": "Праздник Сабантуй",
@@ -25,6 +23,7 @@ BASHKORTOSTAN_HOLIDAYS = {
     "05-23": "День Республики Башкортостан"
 }
 
+# Команды /sorry и /comfort
 SORRIES = [
     "Прости меня, это была моя ошибка.",
     "Мне очень жаль, что так получилось.",
@@ -60,6 +59,12 @@ COMFORTS = [
     "Ты хороший человек. Не сомневайся в себе.",
     "Всё пройдет, и ты станешь сильнее."
 ]
+
+# Инициализация бота и диспетчера
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
+
+app = FastAPI()
 
 def get_all_holidays(date_str):
     try:
@@ -105,11 +110,11 @@ def generate_message(world_holidays, ru_holidays, local_holidays):
         message += "🇷🇺 В России сегодня нет праздников.\n\n"
 
     if local_holidays:
-        message += " Республиканские праздники Башкортостана:\n"
+        message += "🇧🇾 Республиканские праздники Башкортостана:\n"
         for h in local_holidays:
             message += f"- {h}\n"
     else:
-        message += " В Башкортостане сегодня нет особых праздников."
+        message += "🇧🇾 В Башкортостане сегодня нет особых праздников."
 
     return message
 
@@ -144,11 +149,8 @@ async def trigger_send():
     return {"status": "ok"}
 
 @app.post("/")
-async def webhook(request: dict):
-    update = Update(**request)
-    await dp._process_update(bot, update)
-
-ADMIN_ID = 6613852308
+async def webhook(update: dict):
+    await dp._process_update(bot, Update(**update))
 
 @app.on_event("startup")
 async def on_startup():
