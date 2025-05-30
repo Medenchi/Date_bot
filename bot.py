@@ -5,10 +5,14 @@ from datetime import datetime
 from fastapi import FastAPI
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.types import Message, Update
+from aiogram.types import Message
+from aiogram.client.session.aiohttp import AiohttpSession
 
-API_TOKEN = "7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY"
-ADMIN_ID = 6613852308
+session = AiohttpSession()
+bot = Bot(token="7967235756:AAGBflfRWJNZzJ_hD1bArkOB-LxcgNA17dY", session=session)
+dp = Dispatcher()
+
+app = FastAPI()
 
 CHECKIDAY_API_URL = "https://checkiday.com/api/v1/dates/"
 CALENDAR_API_URL = "https://date.nager.at/api/v2/PublicHolidays/{year}/RU"
@@ -57,10 +61,6 @@ COMFORTS = [
     "Всё пройдет, и ты станешь сильнее."
 ]
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
-app = FastAPI()
-
 def get_all_holidays(date_str):
     try:
         response = requests.get(f"{CHECKIDAY_API_URL}{date_str}", timeout=10)
@@ -75,7 +75,7 @@ def get_russian_holidays(year):
     try:
         response = requests.get(CALENDAR_API_URL.format(year=year), timeout=10)
         if response.status_code == 200:
-            return [f"{item['name']} ({item['date']})" for item in response.json() if item['countryCode'] == 'RU']
+            return [f"{item['name']} ({item['date']})" for item in response.json()]
         else:
             return []
     except Exception as e:
@@ -119,16 +119,24 @@ async def send_holidays(chat_id):
     month_day = now.strftime("%m-%d")
     year = now.year
 
-    world_holidays = get_all_holidays(date_str)
-    ru_holidays = get_russian_holidays(year)
-    local_holidays = get_bashkortostan_holidays(month_day)
+    world = get_all_holidays(date_str)
+    russia = get_russian_holidays(year)
+    bashkir = get_bashkortostan_holidays(month_day)
 
-    message = generate_message(world_holidays, ru_holidays, local_holidays)
+    message = generate_message(world, russia, bashkir)
     await bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
 @dp.message(lambda message: message.text == "/start")
 async def cmd_start(message: Message):
     await send_holidays(message.from_user.id)
+
+@dp.message(lambda message: message.text == "/sorry")
+async def cmd_sorry(message: Message):
+    await message.answer(random.choice(SORRIES))
+
+@dp.message(lambda message: message.text in ["/comfort", "/pg"])
+async def cmd_comfort(message: Message):
+    await message.answer(random.choice(COMFORTS))
 
 @app.get("/send-holidays")
 async def trigger_send():
@@ -138,7 +146,9 @@ async def trigger_send():
 @app.post("/")
 async def webhook(request: dict):
     update = Update(**request)
-    await dp.feed_webhook_update(bot, update)
+    await dp._process_update(bot, update)
+
+ADMIN_ID = 6613852308
 
 @app.on_event("startup")
 async def on_startup():
@@ -148,6 +158,7 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     await bot.delete_webhook()
+    await bot.session.close()
 
 if __name__ == "__main__":
     import uvicorn
